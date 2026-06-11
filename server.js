@@ -13,14 +13,12 @@ app.post("/databricks-failure", async (req, res) => {
   try {
     console.log("Incoming payload:", JSON.stringify(req.body, null, 2));
 
-    // We will confirm exact field after first test
-    const jobId =
-      req.body.job_id || req.body.job?.job_id || req.body.event?.job_id;
+    const jobId = req.body.job?.job_id;
 
     if (!jobId) {
       return res.status(400).json({
         success: false,
-        message: "job_id not found in payload",
+        message: "job_id not found",
       });
     }
 
@@ -36,33 +34,36 @@ app.post("/databricks-failure", async (req, res) => {
       },
     );
 
-    const jobData = jobResponse.data;
+    console.log("Job Response:", JSON.stringify(jobResponse.data, null, 2));
 
-    const owner = jobData.creator_user_name || "Unknown";
+    const job = jobResponse.data;
 
-    const jobName = jobData.settings?.name || "Unknown";
+    const owner = job.creator_user_name || job.run_as_user_name || "Unknown";
 
-    const teamsMessage = {
+    const jobName = req.body.job?.name || job.settings?.name || "Unknown";
+
+    const runId = req.body.run?.run_id;
+
+    const message = {
       text: `🚨 Databricks Job Failed
 
-        Job Name: ${jobName}
-        Owner: ${owner}
-        Job ID: ${jobId}`,
+Job: ${jobName}
+Owner: ${owner}
+
+Job ID: ${jobId}
+Run ID: ${runId}`,
     };
 
-    await axios.post(process.env.TEAMS_WEBHOOK, teamsMessage);
-
-    console.log("Teams notification sent");
+    await axios.post(process.env.TEAMS_WEBHOOK, message);
 
     res.status(200).json({
       success: true,
     });
-  } catch (error) {
-    console.error(error.response?.data || error.message);
+  } catch (err) {
+    console.error(err.response?.data || err.message);
 
     res.status(500).json({
       success: false,
-      error: error.message,
     });
   }
 });
