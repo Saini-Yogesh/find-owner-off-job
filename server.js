@@ -72,8 +72,6 @@ app.post("/databricks-failure", async (req, res) => {
 
     console.log("Teams Response:", teamsResponse.status);
 
-    await axios.post(process.env.TEAMS_WEBHOOK, message);
-
     res.status(200).json({
       success: true,
     });
