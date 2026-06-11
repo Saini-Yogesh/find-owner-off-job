@@ -44,15 +44,33 @@ app.post("/databricks-failure", async (req, res) => {
 
     const runId = req.body.run?.run_id;
 
-    const message = {
-      text: `🚨 Databricks Job Failed
+    const enrichedPayload = {
+      ...req.body,
 
-Job: ${jobName}
-Owner: ${owner}
+      owner: job.settings?.tags?.Owner || job.creator_user_name,
 
-Job ID: ${jobId}
-Run ID: ${runId}`,
+      creator_user_name: job.creator_user_name,
+
+      run_as_user_name: job.run_as_user_name,
+
+      run_as_owner: job.run_as_owner,
+
+      tags: job.settings?.tags || {},
     };
+
+    console.log("Sending to Teams:", JSON.stringify(enrichedPayload, null, 2));
+
+    const teamsResponse = await axios.post(
+      process.env.TEAMS_WEBHOOK,
+      enrichedPayload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    console.log("Teams Response:", teamsResponse.status);
 
     await axios.post(process.env.TEAMS_WEBHOOK, message);
 
@@ -60,7 +78,11 @@ Run ID: ${runId}`,
       success: true,
     });
   } catch (err) {
-    console.error(err.response?.data || err.message);
+    console.error("Status:", err.response?.status);
+
+    console.error("Response:", err.response?.data);
+
+    console.error(err.message);
 
     res.status(500).json({
       success: false,
