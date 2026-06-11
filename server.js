@@ -76,14 +76,12 @@ app.post("/databricks-failure", async (req, res) => {
       success: true,
     });
   } catch (err) {
-    console.error("Status:", err.response?.status);
-
-    console.error("Response:", err.response?.data);
-
-    console.error(err.message);
+    console.error("FULL ERROR:");
+    console.error(err.stack);
 
     res.status(500).json({
       success: false,
+      error: err.message,
     });
   }
 });
@@ -92,6 +90,7 @@ app.get("/", (_, res) => {
   res.send("Databricks Alert Service Running");
 });
 
+console.log("SERVER VERSION 2");
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
