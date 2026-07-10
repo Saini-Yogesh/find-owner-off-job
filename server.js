@@ -8,9 +8,21 @@ const PORT = process.env.PORT || 3000;
 
 app.post("/databricks-failure", async (req, res) => {
   try {
-    console.log("========== DATABRICKS WEBHOOK ==========");
-    console.log(JSON.stringify(req.body, null, 2));
+    const requestData = req.body;
+
+    console.log("========== DATABRICKS REQUEST Body ==========");
+    console.log(requestData);
+    console.log("========== Formatted DATABRICKS REQUEST Body==========");
+    console.log(JSON.stringify(requestData, null, 2));
     console.log("========================================");
+
+    console.log(
+      `Job ID: ${requestData.job?.job_id} | ` +
+        `Job Name: ${requestData.job?.name} | ` +
+        `Run ID: ${requestData.run?.run_id} | ` +
+        `Run URL: ${requestData.run?.run_page_url} | ` +
+        `Event Type: ${requestData.event_type}`,
+    );
 
     res.status(200).json({
       success: true,
